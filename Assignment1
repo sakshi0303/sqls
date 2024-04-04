@@ -8,7 +8,6 @@ April 3 2024
 select p.ProductID,p.ProductName,p.color,p.UnitPrice as ListPrice 
 from Products p
 
-
 --Write a query that retrieves the columns ProductID, Name, Color and ListPrice from the Production.Product table, excludes the rows that ListPrice is 0.
 select p.ProductID,p.ProductName,p.color,p.UnitPrice as ListPrice 
 from Products p 
