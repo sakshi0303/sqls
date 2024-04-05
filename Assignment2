@@ -1,0 +1,171 @@
+"""
+Fnu Sakshi
+Assignment1
+April 4 2024
+"""
+
+1--How many products can you find in the Production.Product table?
+select count(*) from Products p  --77
+
+2--Write a query that retrieves the number of products in the Production.Product table that are included in a subcategory. 
+--The rows that have NULL in column ProductSubcategoryID are considered to not be a part of any subcategory.
+select count(p.ProductSubcategoryID) FROM products p
+
+3--How many Products reside in each SubCategory? Write a query to display the results with the following titles.
+--ProductSubcategoryID CountedProducts
+select p.ProductSubcategoryID,count(*) as CountedProducts
+from Products p
+group by p.ProductSubcategoryID
+
+4--How many products that do not have a product subcategory.
+select count(*) from Products where ProductSubcategoryID is null
+
+5--Write a query to list the sum of products quantity in the Production.ProductInventory table.
+select p.ProductID,sum(quantity)
+from Products p
+group by p.ProductID
+
+--6.    Write a query to list the sum of products in the Production.ProductInventory table and LocationID set to 40 
+---and limit the result to include just summarized quantities less than 100.
+select ProductID,sum(quantity) as TheSum
+from Production.ProductInventory
+where LocationID=40
+GROUP BY ProductID
+HAVING sum(quantity)<100
+
+
+--7   Write a query to list the sum of products with the shelf information in the Production.ProductInventory table and 
+--LocationID set to 40 and limit the result to include just summarized quantities less than 100
+--Shelf      ProductID    TheSum
+select shelf,ProductID,sum(quantity) as TheSum
+from  Production.ProductInventory 
+where LocationID=40
+GROUP by shelf,ProductID
+HAVING sum(quantity)<100
+
+--8. Write the query to list the average quantity for products where column LocationID has the value of 10 from the table Production.ProductInventory table.
+select avg(quantity) from Production.ProductInventory
+where LocationID=10
+
+--9.    Write query  to see the average quantity  of  products by shelf  from the table Production.ProductInventory  --    ProductID   Shelf      TheAvg
+select ProductID,Shelf,avg(quantity) 'TheAvg'
+from  Production.ProductInventory
+group by shelf,ProductID
+
+--10 Write query  to see the average quantity  of  products by shelf excluding rows that has the value of N/A in the column Shelf from the table Production.ProductInventory ---ProductID   Shelf      TheAvg
+select ProductId,Shelf,avg(quantity) from  Production.ProductInventory
+where Shelf<>'N/A'
+group by Shelf,ProductID
+
+
+----11.  List the members (rows) and average list price in the Production.Product table. This should be grouped independently over the Color and the Class column. Exclude the rows where Color or Class are null. ---Color | Class | TheCount | AvgPrice
+select Color,Class,count(*) as TheCount ,avg(listprice) as AvgPrice
+from Production.Product
+group by color,class
+having color is not NULL and Class is not null
+
+----12.   Write a query that lists the country and province names from person. CountryRegion and person. StateProvince tables. Join them and produce a result set similar to the following.
+---Country  Province
+select c.name 'Country',s.name 'Province'
+from person.CountryRegion c
+join person.StateProvince s
+on c.CountryRegion=s.CountryRegion
+
+
+----13 Write a query that lists the country and province names from person. CountryRegion and person. StateProvince tables and list the countries filter them by Germany and Canada. Join them and produce a result set similar to the following.
+----Country Province
+select c.name 'Country',s.name 'Province'
+from person.CountryRegion c
+join person.StateProvince s
+on c.CountryRegion=s.CountryRegion
+where c.name in ('Germany','Canada')
+
+
+---  List all Products that has been sold at least once in last 26 years.
+select distinct*from products p
+inner join(select productid from[order details] od
+inner join orders o
+on od.orderid=o.orderid
+where datediff(year,o.orderdate,getdate()) <26) od 
+on p.productid=od.productid
+
+-- 15.  List top 5 locations (Zip Code) where the products sold most.
+select top5 c.postalcode from customers c
+inner join (select o.CustomerID,od.ProductID,od.Quantity from orders o
+inner join[Order Details] od
+on o.orderid=od.orderid) x
+on c.CustomerID=x.customerid
+where PostalCode is not null
+group by c.postalcode
+order by sum(quantity)DESC
+
+--16 16.  List top 5 locations (Zip Code) where the products sold most in last 26 years.
+select top 5 shippostalcode 'zip code',
+count(*)
+from Orders o
+where datediff(year,o.orderdate,getdate()) <26
+group by ShipPostalCode
+order by ShipPostalCode
+
+--17.   List all city names and number of customers in that city.    
+select city,count(*) NumCustomers
+from customer c
+group by city
+
+--18.  List city names which have more than 2 customers, and number of customers in that city
+select city,count(*) NumCustomers
+from customers c
+group by City
+having count(*)>2
+
+---19.  List the names of customers who placed orders after 1/1/98 with order date.
+select distinct c.ContactName 
+from Customers c inner join orders o on 
+c.CustomerID=o.CustomerID
+where OrderDate>'1/1/98'
+
+--20.  List the names of all customers with most recent order dates
+select c.ContactName,max(OrderDate)'recent date'
+from Orders o inner join Customers c on
+o.CustomerID=c.CustomerID group by ContactName
+
+---21.  Display the names of all customers  along with the  count of products they bought
+select c.Contactname,cp.s 
+from customers c inner join (select customerid,sum(quantity) s from[Order Details] od inner join orders o on od.OrderID=o.OrderID group by CustomerID)cp on c.CustomerID=cp.customerid
+
+---22.  Display the customer ids who bought more than 100 Products with count of products.
+select c.Contactname,cp.sfromcustomers c inner join (select customerid,sum(quantity) s from[Order Details] od inner join orders o on od.OrderID=o.OrderID group by CustomerID) cp on c.CustomerID=cp.customerid
+
+
+---23.  List all of the possible ways that suppliers can ship their products. Display the results as below
+--Supplier Company Name                Shipping Company Name
+select su.companyname [Supplier Company Name],sh.CompanyName [Shipping CompanyName] 
+from Suppliers su
+cross join Shippers sh
+
+
+--24.  Display the products order each day. Show Order date and Product Name.
+select o.OrderDate,p.ProductName
+from orders o
+cross join Products p
+
+--25.  Displays pairs of employees who have the same job title.
+select distinct e1.EmployeeID, e2.EmployeeID from employees e1
+inner join Employees e2 
+on e1.Title=e2.Title
+where e1.EmployeeID<>e2.EmployeeID
+
+--26.  Display all the Managers who have more than 2 employees reporting to them.
+select distinct e1.lastname,e1.firstname from employees e1
+inner join employees e2
+on e1.employeeid=e2.reportsto
+group by e1.lastname,e1.firstname
+having count(e1.employeeid) >2
+
+--27.  Display the customers and suppliers by city. The results should have the following columns
+SELECT City, Name, ContactName, 'Customer' AS Type
+FROM Customers
+UNION
+SELECT City, CompanyName AS Name, ContactName, 'Supplier' AS Type
+FROM Suppliers
+ORDER BY City, Type;
