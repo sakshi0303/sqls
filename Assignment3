@@ -1,0 +1,106 @@
+"""
+Fnu Sakshi
+Assignment3
+April 7 2024
+"""
+
+---      List all cities that have both Employees and Customers.
+            select e.City from Employees e
+            union  
+            select c.City from Customers c
+
+
+---      List all cities that have Customers but no Employee.
+            --do not use sub query
+            select distinct c.city from Customers c where c.city not in (select city from Employees)
+            ---Do not use sub-query
+            select distinct c.city
+            from Customers c
+            left join Employees E
+            on c.city!=e.city
+     
+
+
+---      List all products and their total order quantities throughout all orders.
+            select c.CustomerID,c.CompanyName,c.ContactName, sum(od.Quantity) as qty
+            from Customers c
+            left JOIN
+            Orders o
+            on c.CustomerID=o.CustomerID
+            left JOIN
+            [Order Details]od
+            on od.OrderID=o.OrderID
+            group by c.CustomerID,c.CompanyName,c.ContactName
+            order by qty DESC
+
+
+---      List all Customer Cities and total products ordered by that city.
+
+            select c.city, sum(od.Quantity) as qty
+            from Customers c
+            left JOIN
+            Orders o
+            on c.CustomerID=o.CustomerID
+            left JOIN
+            [Order Details]od
+            on od.OrderID=o.OrderID
+            group by c.City
+            order by qty DESC
+
+---      List all Customer Cities that have at least two customers.
+
+---      Use union
+            select c.city from Customers c group by c.City having COUNT(c.city)>2
+            UNION
+            select c.city from Customers c group by c.City having COUNT(c.city)=2
+
+---      Use sub-query and no union
+
+        select distinct c.city from customers c where c.city in (select cc.City from Customers cc group by cc.City having count(cc.city)>=2)
+
+---      List all Customer Cities that have ordered at least two different kinds of products.
+        select distinct c.city
+        from Orders o INNER join Customers c
+        on c.CustomerID=o.CustomerID
+        inner join [Order Details]r
+        on r.OrderID=o.OrderID
+        group by c.city,r.ProductID
+        having count(r.ProductID)>2
+
+---      List all Customers who have ordered products, but have the ‘ship city’ on the order different from their own customer cities.
+            select * from Customers c
+            where c.city not in (select o.shipcity from Orders o inner join Customers c on o.ShipCity=c.City)
+---      List 5 most popular products, their average price, and the customer city that ordered most quantity of it.
+                With cte_ordr
+                as(
+                    select oc.shipcity,oc.ProductID,oc.average,DENSE_RANK() over (partition by oc.ProductID order by oc.number) rnk 
+                )
+---      List all cities that have never ordered something but we have employees there.
+---      Use sub-query
+            select e.city from Employees e
+            where e.city not in (select c.city from orders o inner join Customers c
+            on c.CustomerID=o.CustomerID)
+---      Do not use sub-query
+            select distinct e.city from Employees e
+            left join Customers c
+            on e.City=c.City
+            where c.City is NULL
+
+---  List one city, if exists, that is the city from where the employee sold most orders (not the product quantity) is, and also the city of most total quantity of products ordered from. (tip: join  sub-query)
+
+            select * from(select Top 1 e.City, count(o.OrderID) countOrder 
+            from Employees e 
+            inner join Orders o
+            on e.EmployeeID = o.EmployeeID
+            group by e.City) T1
+            inner join (select Top 1 c.City, count(r.Quantity) countQuantity 
+            from [Order Details] r 
+            inner join Orders d 
+            on r.OrderID = d.OrderID
+            inner join Customers c on c.CustomerID = d.CustomerID 
+            group by c.City) T2
+            on T1.City = T2.City
+---11. How do you remove the duplicates record of a table?
+        -use primary key (does not allow null value )
+        -use unique key (allow 1 null value )
+        
